@@ -1,7 +1,6 @@
 import os
 
 import openai
-from langchain.chat_models import ChatOpenAI
 from litellm import completion
 from utils import parse_code_string
 
@@ -9,15 +8,10 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
 class AI:
-    def __init__(self, model="openrouter/openai/gpt-4-32k", temperature=0.1, max_tokens=10000):
+    def __init__(self, model="gemini/gemini-1.5-flash", temperature=0.1, max_tokens=10000):
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.model_name = model
-        try:
-            _ = ChatOpenAI(model_name=model)  # check to see if model is available to user
-        except Exception as e:
-            print(e)
-            self.model_name = "gpt-3.5-turbo"
 
     def write_code(self, prompt):
         message = [{"role": "user", "content": str(prompt)}]
@@ -47,5 +41,7 @@ class AI:
         for chunk in response:
             delta = chunk["choices"][0]["delta"]
             msg = delta.get("content", "")
-            chat += msg
+            print("msg=", msg)
+            if msg:
+                chat += msg
         return chat

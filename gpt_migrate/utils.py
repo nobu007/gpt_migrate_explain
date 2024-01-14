@@ -1,4 +1,5 @@
 import fnmatch
+import glob
 import os
 import re
 import shutil
@@ -6,19 +7,34 @@ from collections import Counter
 from pathlib import Path
 
 import typer
-from config import EXTENSION_TO_LANGUAGE, INCLUDED_EXTENSIONS
+from config import (
+    EXCLUDED_EXTENSIONS_SOURCE,
+    EXTENSION_TO_LANGUAGE,
+    INCLUDED_EXTENSIONS,
+)
 from yaspin import yaspin
 
 
 def detect_language(source_directory):
     file_extensions = []
 
-    for filenames in os.walk(source_directory):
-        for filename in filenames[2]:
-            ext = filename.split(".")[-1]
-            file_extensions.append(ext)
+    # シンボリックリンクをたどるためにglobを使っています。
+    for file in glob.glob(source_directory + "/**/*", recursive=True):
+        if os.path.isfile(file):
+            # ファイルの拡張子を取得します。
+            ext = os.path.splitext(file)[1]
+
+            if ext in EXCLUDED_EXTENSIONS_SOURCE:
+                print(
+                    f"""Excluded file: {0}
+                    by EXCLUDED_EXTENSIONS_SOURCE={1}""".format(file, EXCLUDED_EXTENSIONS_SOURCE)
+                )
+                continue
+            # ファイルの拡張子をリストに追加します。
+            file_extensions.append(ext.replace(".", ""))
 
     extension_counts = Counter(file_extensions)
+    print("ext most_common=", extension_counts.most_common(1))
     most_common_extension, _ = extension_counts.most_common(1)[0]
 
     # Determine the language based on the most common file extension
@@ -57,18 +73,22 @@ def llm_write_file(prompt, target_path, waiting_message, success_message, global
     if file_name == "INSTRUCTIONS:":
         return "INSTRUCTIONS:", "", file_content
 
+    if file_name == "INSTRUCTIONS:":
+        return "INSTRUCTIONS:", "", file_content
+
+    targetdir = globals.targetdir
     if target_path:
-        with open(os.path.join(globals.targetdir, target_path), "w") as file:
+        with open(os.path.join(targetdir, target_path), "w") as file:
             file.write(file_content)
     else:
-        with open(os.path.join(globals.targetdir, file_name), "w") as file:
+        with open(os.path.join(targetdir, file_name), "w") as file:
             file.write(file_content)
 
     if success_message:
         success_text = typer.style(success_message, fg=typer.colors.GREEN)
         typer.echo(success_text)
     else:
-        success_text = typer.style(f"Created {file_name} at {globals.targetdir}", fg=typer.colors.GREEN)
+        success_text = typer.style(f"Created {file_name} at {targetdir}", fg=typer.colors.GREEN)
         typer.echo(success_text)
 
     return file_name, language, file_content
@@ -141,9 +161,18 @@ def is_ignored(entry_path, gitignore_patterns):
     return any(fnmatch.fnmatch(entry_path, pattern) for pattern in gitignore_patterns)
 
 
-def build_directory_structure(path=".", indent="", is_last=True, parent_prefix="", is_root=True):
+def build_directory_structure(
+    path=".",
+    indent="",
+    is_last=True,
+    parent_prefix="",
+    is_root=True,
+    ignore_patterns=None,
+):
+    if ignore_patterns is None:
+        ignore_patterns = []
     gitignore_patterns = read_gitignore(path) + [".gitignore", "*gpt_migrate/*"] if indent == "" else ["*gpt_migrate/*"]
-
+    ignore_patterns = list(set(ignore_patterns + gitignore_patterns))
     base_name = os.path.basename(path)
 
     if not base_name:
@@ -186,7 +215,12 @@ def copy_files(sourcedir, targetdir, excluded_files=[]):
                 if not is_ignored(item, gitignore_patterns):
                     os.makedirs(targetdir, exist_ok=True)
                     shutil.copy(os.path.join(sourcedir, item), targetdir)
-                    typer.echo(typer.style(f"Copied {item} from {sourcedir} to {targetdir}", fg=typer.colors.GREEN))
+                    # typer.echo(
+                    #     typer.style(
+                    #         f"Copied {item} from {sourcedir} to {targetdir}",
+                    #         fg=typer.colors.GREEN,
+                    #     )
+                    # )
         else:
             copy_files(os.path.join(sourcedir, item), os.path.join(targetdir, item))
 

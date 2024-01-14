@@ -72,6 +72,9 @@ ignore = [
   "SIM113", # enumerate-for-loop
   "SIM117", # multiple-with-statements
   "SIM210", # if-expr-with-true-false
+  "FURB103", # repeated-assignment(added)
+  "FURB101", # repeated-attribute(added)
+  "E501", # line-too-long(added)
 ]
 
 [lint.per-file-ignores]

@@ -33,8 +33,13 @@ IDENTIFY_FILE = "p3_debug/identify_file"
 DEBUG_FILE = "p3_debug/debug_file"
 DEBUG_TESTFILE = "p3_debug/debug_testfile"
 HUMAN_INTERVENTION = "p3_debug/human_intervention"
+GET_EXTERNAL_DEPS_EXPLAIN = "p3_explain/1_get_external_deps"
+GET_INTERNAL_DEPS_EXPLAIN = "p3_explain/2_get_internal_deps"
+WRITE_EXPLAIN = "p3_explain/3_write_explain"
+GET_FUNCTION_SIGNATURES_EXPLAIN = "p3_explain/6_get_function_signatures"
 MULTIFILE = "p4_output_formats/multi_file"
 SINGLEFILE = "p4_output_formats/single_file"
+SINGLEFILE_EXPLAIN = "p4_output_formats/single_file_explain"
 FILENAMES = "p4_output_formats/filenames"
 
 """
@@ -127,3 +132,11 @@ EXTENSION_TO_LANGUAGE = {
     "jl": "Julia",
     "nim": "Nim",
 }
+
+LANGUAGE_TO_EXTENSION = {}
+for key, val in EXTENSION_TO_LANGUAGE.items():
+    LANGUAGE_TO_EXTENSION[val] = key
+
+EXCLUDED_EXTENSIONS_SOURCE = [
+    ".md",
+]

@@ -36,8 +36,22 @@ def debug_error(error_message, relevant_files, globals):
     if "MOVE_FILES" in action_list:
         if not os.path.exists(os.path.join(globals.targetdir, "gpt_migrate")):
             os.makedirs(os.path.join(globals.targetdir, "gpt_migrate"))
-
         move_files_template = prompt_constructor(HIERARCHY, GUIDELINES, WRITE_CODE, MOVE_FILES, SINGLEFILE)
+        prompt = move_files_template.format(
+            error_message=error_message[-min(MAX_ERROR_MESSAGE_CHARACTERS, len(error_message)) :],
+            target_directory_structure=build_directory_structure(globals.targetdir),
+            current_full_path=globals.targetdir,
+            operating_system=globals.operating_system,
+            guidelines=globals.guidelines,
+        )
+
+        file_name, language, shell_script_content = llm_write_file(
+            prompt,
+            target_path="gpt_migrate/debug.sh",
+            waiting_message="Writing shell script...",
+            success_message="Wrote debug.sh based on error message.",
+            globals=globals,
+        )
 
         prompt = move_files_template.format(
             error_message=error_message[-min(MAX_ERROR_MESSAGE_CHARACTERS, len(error_message)) :],
@@ -94,7 +108,11 @@ def debug_error(error_message, relevant_files, globals):
         identify_file_template = prompt_constructor(HIERARCHY, GUIDELINES, IDENTIFY_FILE, FILENAMES)
 
         docker_logs = subprocess.run(
-            ["docker", "logs", "gpt-migrate"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True, text=True
+            ["docker", "logs", "gpt_migrate_explain"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            check=True,
+            text=True,
         ).stdout
 
         prompt = (

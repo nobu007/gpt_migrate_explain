@@ -46,8 +46,8 @@ class Globals:
 @app.command()
 def main(
     model: str = typer.Option(
-        "openrouter/openai/gpt-4-32k",
-        help="Large Language Model to be used. Default is 'openrouter/openai/gpt-4-32k'. To use OpenAI directly with your API key, use 'gpt-4-32k'.",
+        "gemini/gemini-1.5-flash",
+        help="Large Language Model to be used. Default is 'gemini/gemini-1.5-flash'. To use OpenAI directly with your API key, use 'gpt-4-32k'.",
     ),
     temperature: float = typer.Option(0, help="Temperature setting for the AI model."),
     sourcedir: str = typer.Option(
@@ -128,7 +128,12 @@ def main(
         )
     )
     time.sleep(0.3)
-    typer.echo(typer.style(f"◑ Outputting {targetlang} project to directory '{targetdir}'.", fg=typer.colors.BLUE))
+    typer.echo(
+        typer.style(
+            f"◑ Outputting {targetlang} project to directory '{targetdir}'.",
+            fg=typer.colors.BLUE,
+        )
+    )
     time.sleep(0.3)
     typer.echo(typer.style("Source directory structure: \n\n" + source_directory_structure, fg=typer.colors.BLUE))
 
@@ -145,8 +150,13 @@ def main(
             # recursively work through each of the files in the source directory, starting with the entrypoint.
             internal_deps_list, external_deps_list = get_dependencies(sourcefile=sourcefile, globals=globals)
             for dependency in internal_deps_list:
-                migrate(dependency, globals, parent_file=sourcefile)
-            file_name = write_migration(sourcefile, external_deps_list, target_deps_per_file.get(sourcefile), globals)
+                migrate(dependency.strip(), globals, parent_file=sourcefile)
+            file_name = write_migration(
+                sourcefile,
+                external_deps_list,
+                target_deps_per_file.get(sourcefile),
+                globals,
+            )
             target_deps_per_file[parent_file].append(file_name)
 
         migrate(sourceentry, globals)

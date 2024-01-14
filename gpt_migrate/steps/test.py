@@ -14,15 +14,15 @@ def run_dockerfile(globals):
     try:
         with yaspin(text="Spinning up Docker container...", spinner="dots") as spinner:
             result = subprocess.run(
-                ["docker", "build", "-t", "gpt-migrate", globals.targetdir],
+                ["docker", "build", "-t", "gpt_migrate_explain", globals.targetdir],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 check=True,
                 text=True,
             )
-            subprocess.run(["docker", "rm", "-f", "gpt-migrate"])
+            subprocess.run(["docker", "rm", "-f", "gpt_migrate_explain"])
             process = subprocess.Popen(
-                ["docker", "run", "-d", "-p", "8080:8080", "--name", "gpt-migrate", "gpt-migrate"],
+                ["docker", "run", "-d", "-p", "8080:8080", "--name", "gpt_migrate_explain", "gpt_migrate_explain"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
