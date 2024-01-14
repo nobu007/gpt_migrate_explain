@@ -1,6 +1,5 @@
-rocket
-serde
-serde_json
-bcrypt
-rusqlite
-serde_json
+bcryptjs
+express
+mongoose
+fs
+json

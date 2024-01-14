@@ -6,31 +6,33 @@ import typer
 from config import (
     ADD_DOCKER_REQUIREMENTS,
     EXCLUDED_FILES,
-    GET_EXTERNAL_DEPS,
-    GET_FUNCTION_SIGNATURES,
-    GET_INTERNAL_DEPS,
+    GET_EXTERNAL_DEPS_EXPLAIN,
+    GET_FUNCTION_SIGNATURES_EXPLAIN,
+    GET_INTERNAL_DEPS_EXPLAIN,
     GUIDELINES,
     HIERARCHY,
     REFINE_DOCKERFILE,
     SINGLEFILE,
+    SINGLEFILE_EXPLAIN,
     WRITE_CODE,
-    WRITE_MIGRATION,
+    WRITE_EXPLAIN,
 )
 from utils import (
     build_directory_structure,
-    convert_sigs_to_string,
     copy_files,
     extract_json_from_response,
     file_exists_in_memory,
+    get_near_source_directory_structure,
     llm_run,
     llm_write_file,
     prompt_constructor,
     read_from_memory,
+    write_file_explain,
     write_to_memory,
 )
 
 
-def get_function_signatures(targetfiles: List[str], globals):
+def get_function_signatures_explain(targetfiles: List[str], globals):
     """Get the function signatures and a one-sentence summary for each function"""
     all_sigs = []
 
@@ -38,30 +40,27 @@ def get_function_signatures(targetfiles: List[str], globals):
         sigs_file_name = targetfile + "_sigs.json"
 
         if file_exists_in_memory(sigs_file_name):
-            try:
-                with open(
-                    os.path.join(
-                        "gpt_migrate_explain/gpt_migrate/memory", sigs_file_name
-                    ),
-                    "r",
-                ) as f:
-                    sigs = json.load(f)
-                all_sigs.extend(sigs)
-            except ValueError:
-                pass
+            with open(
+                os.path.join("gpt_migrate_explain/gpt_migrate/memory", sigs_file_name),
+                "r",
+            ) as f:
+                sigs = json.load(f)
+            all_sigs.extend(sigs)
+
         else:
             function_signatures_template = prompt_constructor(
-                HIERARCHY, GUIDELINES, GET_FUNCTION_SIGNATURES
+                HIERARCHY, GUIDELINES, GET_FUNCTION_SIGNATURES_EXPLAIN
             )
 
-            targetfile_content = ""
-            with open(os.path.join(globals.targetdir, targetfile), "r") as file:
-                targetfile_content = file.read()
+            sourcefile_content = ""
+            print("targetfile=" + targetfile)
+            with open(os.path.join(globals.sourcedir, targetfile), "r") as file:
+                sourcefile_content = file.read()
 
             prompt = function_signatures_template.format(
                 targetlang=globals.targetlang,
                 sourcelang=globals.sourcelang,
-                targetfile_content=targetfile_content,
+                sourcefile_content=sourcefile_content,
             )
 
             try:
@@ -85,20 +84,20 @@ def get_function_signatures(targetfiles: List[str], globals):
                     "w",
                 ) as f:
                     json.dump(sigs, f)
-            except ValueError:
+            except json.decoder.JSONDecodeError:
                 pass
 
     return all_sigs
 
 
-def get_dependencies(sourcefile, globals):
+def get_dependencies_explain(sourcefile, globals):
     """Get external and internal dependencies of source file"""
 
     external_deps_prompt_template = prompt_constructor(
-        HIERARCHY, GUIDELINES, GET_EXTERNAL_DEPS
+        HIERARCHY, GUIDELINES, GET_EXTERNAL_DEPS_EXPLAIN
     )
     internal_deps_prompt_template = prompt_constructor(
-        HIERARCHY, GUIDELINES, GET_INTERNAL_DEPS
+        HIERARCHY, GUIDELINES, GET_INTERNAL_DEPS_EXPLAIN
     )
 
     sourcefile_content = ""
@@ -123,12 +122,15 @@ def get_dependencies(sourcefile, globals):
     )
     write_to_memory("external_dependencies", external_deps_list)
 
+    near_source_directory_structure = get_near_source_directory_structure(
+        globals.source_directory_structure, sourcefile
+    )
     prompt = internal_deps_prompt_template.format(
         targetlang=globals.targetlang,
         sourcelang=globals.sourcelang,
         sourcefile=sourcefile,
         sourcefile_content=sourcefile_content,
-        source_directory_structure=globals.source_directory_structure,
+        source_directory_structure=near_source_directory_structure,
     )
 
     internal_dependencies = llm_run(
@@ -137,6 +139,7 @@ def get_dependencies(sourcefile, globals):
         success_message=None,
         globals=globals,
     )
+    print("internal_dependencies=", internal_dependencies)
 
     # Sanity checking internal dependencies to avoid infinite loops
     if sourcefile in internal_dependencies:
@@ -154,44 +157,70 @@ def get_dependencies(sourcefile, globals):
         else []
     )
 
+    write_to_memory("internal_dependencies", internal_deps_list)
+
     return internal_deps_list, external_deps_list
 
 
-def write_migration(sourcefile, external_deps_list, deps_per_file, globals) -> str:
-    """Write migration file"""
+def write_explain(
+    sourcefile_relative_path, external_deps_list, deps_per_file, globals
+) -> str:
+    """Write explain file"""
 
-    sigs = get_function_signatures(deps_per_file, globals) if deps_per_file else []
+    # sigs = (
+    #     get_function_signatures_explain(deps_per_file, globals) if deps_per_file else []
+    # )
 
-    write_migration_template = prompt_constructor(
-        HIERARCHY, GUIDELINES, WRITE_CODE, WRITE_MIGRATION, SINGLEFILE
-    )
-
+    # write_explain_template = prompt_constructor(
+    #     HIERARCHY, GUIDELINES, WRITE_EXPLAIN, SINGLEFILE_EXPLAIN
+    # )
+    # write_explain_template = prompt_constructor(HIERARCHY, GUIDELINES, WRITE_EXPLAIN)
+    sourcefile_abs_path = os.path.join(globals.sourcedir, sourcefile_relative_path)
     sourcefile_content = ""
-    with open(os.path.join(globals.sourcedir, sourcefile), "r") as file:
+    with open(sourcefile_abs_path, "r") as file:
         sourcefile_content = file.read()
 
-    prompt = write_migration_template.format(
-        targetlang=globals.targetlang,
-        targetlang_function_signatures=convert_sigs_to_string(sigs),
-        sourcelang=globals.sourcelang,
-        sourcefile=sourcefile,
-        sourcefile_content=sourcefile_content,
-        external_deps=",".join(external_deps_list),
-        source_directory_structure=globals.source_directory_structure,
-        target_directory_structure=build_directory_structure(globals.targetdir),
-        guidelines=globals.guidelines,
+    globals.sourcefile_content = sourcefile_content
+
+    # prompt = write_explain_template.format(
+    #     targetlang=globals.targetlang,
+    #     targetlang_function_signatures=convert_sigs_to_string(sigs),
+    #     sourcelang=globals.sourcelang,
+    #     sourcefile=sourcefile,
+    #     sourcefile_content=sourcefile_content,
+    #     external_deps=",".join(external_deps_list),
+    #     source_directory_structure=globals.source_directory_structure,
+    #     explain_directory_structure=build_directory_structure(globals.explaindir),
+    #     guidelines=globals.guidelines,
+    # )
+
+    # build prompt and predict by llm
+
+    # split sourcefile_content for llm input
+    sourcefile_content_list = globals.ai.split_sourcefile_content(
+        sourcefile_abs_path, sourcefile_content
     )
 
-    return llm_write_file(
-        prompt,
-        target_path=None,
-        waiting_message=f"Creating migration file for {sourcefile}...",
-        success_message=None,
+    # call llm
+    splitted_explainfile_content_list = []
+    for sourcefile_content in sourcefile_content_list:
+        response_list = globals.ai.write_explain_llm(sourcefile_content, globals)
+        for response in response_list:
+            splitted_explainfile_content_list.append(response)
+
+    # set explainfile_content
+    globals.explainfile_content = "\n\n\n".join(splitted_explainfile_content_list)
+    explainfile_relative_path = sourcefile_relative_path.replace(
+        globals.sourcedir, globals.explaindir
+    )
+
+    return write_file_explain(
+        explainfile_relative_path,
         globals=globals,
     )[0]
 
 
-def add_env_files(globals):
+def add_env_files_explain(globals):
     """Copy all files recursively with included extensions from the source directory to the target directory in the same relative structure"""
 
     copy_files(globals.sourcedir, globals.targetdir, excluded_files=EXCLUDED_FILES)
@@ -203,7 +232,10 @@ def add_env_files(globals):
     )
 
     dockerfile_content = ""
-    with open(os.path.join(globals.targetdir, "Dockerfile"), "r") as file:
+    dockerfile_path = os.path.join(globals.targetdir, "Dockerfile")
+    if not os.path.isfile(dockerfile_path):
+        return
+    with open(dockerfile_path, "r") as file:
         dockerfile_content = file.read()
 
     external_deps = read_from_memory("external_dependencies")
@@ -222,6 +254,7 @@ def add_env_files(globals):
         waiting_message=f"Creating dependencies file required for the Docker environment...",
         success_message=None,
         globals=globals,
+        targetdir=globals.explaindir,
     )
 
     """ Refine Dockerfile """
@@ -243,4 +276,5 @@ def add_env_files(globals):
         waiting_message=f"Refining Dockerfile based on dependencies required for the Docker environment...",
         success_message="Refined Dockerfile with dependencies required for the Docker environment.",
         globals=globals,
+        targetdir=globals.explaindir,
     )
