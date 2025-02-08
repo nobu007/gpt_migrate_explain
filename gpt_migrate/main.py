@@ -1,15 +1,14 @@
-import typer
-from utils import detect_language, build_directory_structure
 import os
-import time as time
+import time
 from collections import defaultdict
 
+import typer
 from ai import AI
-
+from steps.debug import debug_error, debug_testfile
+from steps.migrate import add_env_files, get_dependencies, write_migration
 from steps.setup import create_environment
-from steps.migrate import get_dependencies, write_migration, add_env_files
-from steps.test import run_dockerfile, create_tests, validate_tests, run_test
-from steps.debug import debug_testfile, debug_error
+from steps.test import create_tests, run_dockerfile, run_test, validate_tests
+from utils import build_directory_structure, detect_language
 
 app = typer.Typer()
 
@@ -89,7 +88,7 @@ def main(
     targetdir = os.path.abspath(targetdir)
     os.makedirs(targetdir, exist_ok=True)
 
-    detected_language = detect_language(sourcedir) if not sourcelang else sourcelang
+    detected_language = sourcelang or detect_language(sourcedir)
 
     if not sourcelang:
         if detected_language:

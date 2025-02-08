@@ -1,12 +1,13 @@
-import os
-import typer
-from yaspin import yaspin
-from pathlib import Path
-from collections import Counter
 import fnmatch
+import os
 import re
 import shutil
-from config import INCLUDED_EXTENSIONS, EXTENSION_TO_LANGUAGE
+from collections import Counter
+from pathlib import Path
+
+import typer
+from config import EXTENSION_TO_LANGUAGE, INCLUDED_EXTENSIONS
+from yaspin import yaspin
 
 
 def detect_language(source_directory):
@@ -29,7 +30,7 @@ def detect_language(source_directory):
 def prompt_constructor(*args):
     prompt = ""
     for arg in args:
-        with open(os.path.abspath(f"prompts/{arg}"), "r") as file:
+        with open(os.path.abspath(f"prompts/{arg}")) as file:
             prompt += file.read().strip()
     return prompt
 
@@ -102,7 +103,7 @@ def llm_write_files(prompt, target_path, waiting_message, success_message, globa
 def load_templates_from_directory(directory_path):
     templates = {}
     for filename in os.listdir(directory_path):
-        with open(os.path.join(directory_path, filename), "r") as file:
+        with open(os.path.join(directory_path, filename)) as file:
             key = os.path.splitext(filename)[0]
             templates[key] = file.read()
     return templates
@@ -128,7 +129,7 @@ def read_gitignore(path):
     gitignore_path = os.path.join(path, ".gitignore")
     patterns = []
     if os.path.exists(gitignore_path):
-        with open(gitignore_path, "r") as file:
+        with open(gitignore_path) as file:
             for line in file:
                 line = line.strip()
                 if line and not line.startswith("#"):
@@ -137,10 +138,7 @@ def read_gitignore(path):
 
 
 def is_ignored(entry_path, gitignore_patterns):
-    for pattern in gitignore_patterns:
-        if fnmatch.fnmatch(entry_path, pattern):
-            return True
-    return False
+    return any(fnmatch.fnmatch(entry_path, pattern) for pattern in gitignore_patterns)
 
 
 def build_directory_structure(path=".", indent="", is_last=True, parent_prefix="", is_root=True):
@@ -223,13 +221,13 @@ def write_to_memory(filename, content):
 
 def read_from_memory(filename):
     content = ""
-    with open("memory/" + filename, "r") as file:
+    with open("memory/" + filename) as file:
         content = file.read()
     return content
 
 
 def find_and_replace_file(filepath, find, replace):
-    with open(filepath, "r") as file:
+    with open(filepath) as file:
         testfile_content = file.read()
     testfile_content = testfile_content.replace(find, replace)
     with open(filepath, "w") as file:

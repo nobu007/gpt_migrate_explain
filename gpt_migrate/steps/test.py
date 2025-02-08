@@ -1,10 +1,12 @@
-from utils import prompt_constructor, llm_write_file, construct_relevant_files, find_and_replace_file
-from config import HIERARCHY, GUIDELINES, WRITE_CODE, CREATE_TESTS, SINGLEFILE
-import subprocess
-import typer
 import os
-import time as time
+import subprocess
+import time
+
+import typer
+from config import CREATE_TESTS, GUIDELINES, HIERARCHY, SINGLEFILE, WRITE_CODE
+from utils import construct_relevant_files, find_and_replace_file, llm_write_file, prompt_constructor
 from yaspin import yaspin
+
 from steps.debug import require_human_intervention
 
 
@@ -46,7 +48,7 @@ def run_dockerfile(globals):
             return error_message
         else:
             dockerfile_content = ""
-            with open(os.path.join(globals.targetdir, "Dockerfile"), "r") as file:
+            with open(os.path.join(globals.targetdir, "Dockerfile")) as file:
                 dockerfile_content = file.read()
             require_human_intervention(
                 error_message,
@@ -62,7 +64,7 @@ def create_tests(testfile, globals):
         os.makedirs(os.path.join(globals.targetdir, "gpt_migrate"))
 
     old_file_content = ""
-    with open(os.path.join(globals.sourcedir, testfile), "r") as file:
+    with open(os.path.join(globals.sourcedir, testfile)) as file:
         old_file_content = file.read()
 
     create_tests_template = prompt_constructor(HIERARCHY, GUIDELINES, WRITE_CODE, CREATE_TESTS, SINGLEFILE)
@@ -104,7 +106,7 @@ def validate_tests(testfile, globals):
         find_and_replace_file(
             os.path.join(globals.targetdir, f"gpt_migrate/{testfile}"), str(globals.sourceport), str(globals.targetport)
         )
-        typer.echo(typer.style(f"Tests validated successfully on your source app.", fg=typer.colors.GREEN))
+        typer.echo(typer.style("Tests validated successfully on your source app.", fg=typer.colors.GREEN))
         return "success"
     except subprocess.CalledProcessError as e:
         find_and_replace_file(
@@ -122,7 +124,7 @@ def validate_tests(testfile, globals):
             return error_message
         else:
             tests_content = ""
-            with open(os.path.join(globals.targetdir, f"gpt_migrate/{testfile}"), "r") as file:
+            with open(os.path.join(globals.targetdir, f"gpt_migrate/{testfile}")) as file:
                 tests_content = file.read()
             require_human_intervention(
                 error_message,
@@ -166,7 +168,7 @@ def run_test(testfile, globals):
             return error_message
         else:
             tests_content = ""
-            with open(os.path.join(globals.targetdir, f"gpt_migrate/{testfile}"), "r") as file:
+            with open(os.path.join(globals.targetdir, f"gpt_migrate/{testfile}")) as file:
                 tests_content = file.read()
             require_human_intervention(
                 error_message,

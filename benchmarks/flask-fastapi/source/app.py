@@ -1,6 +1,6 @@
-from flask import Flask, request, jsonify
-from bcrypt import hashpw, gensalt
+from bcrypt import gensalt, hashpw
 from db import read_items, write_items
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 

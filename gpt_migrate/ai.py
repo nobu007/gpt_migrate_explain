@@ -1,9 +1,9 @@
-from langchain.chat_models import ChatOpenAI
-from config import OPENAI_API_KEY
 import os
+
 import openai
-from utils import parse_code_string
+from langchain.chat_models import ChatOpenAI
 from litellm import completion
+from utils import parse_code_string
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 

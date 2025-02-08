@@ -1,34 +1,34 @@
-from utils import (
-    prompt_constructor,
-    llm_write_file,
-    llm_run,
-    build_directory_structure,
-    copy_files,
-    write_to_memory,
-    read_from_memory,
-    file_exists_in_memory,
-    convert_sigs_to_string,
-)
-from config import (
-    HIERARCHY,
-    GUIDELINES,
-    WRITE_CODE,
-    GET_EXTERNAL_DEPS,
-    GET_INTERNAL_DEPS,
-    ADD_DOCKER_REQUIREMENTS,
-    REFINE_DOCKERFILE,
-    WRITE_MIGRATION,
-    SINGLEFILE,
-    EXCLUDED_FILES,
-    GET_FUNCTION_SIGNATURES,
-)
-from typing import List
-import os
 import json
+import os
+
 import typer
+from config import (
+    ADD_DOCKER_REQUIREMENTS,
+    EXCLUDED_FILES,
+    GET_EXTERNAL_DEPS,
+    GET_FUNCTION_SIGNATURES,
+    GET_INTERNAL_DEPS,
+    GUIDELINES,
+    HIERARCHY,
+    REFINE_DOCKERFILE,
+    SINGLEFILE,
+    WRITE_CODE,
+    WRITE_MIGRATION,
+)
+from utils import (
+    build_directory_structure,
+    convert_sigs_to_string,
+    copy_files,
+    file_exists_in_memory,
+    llm_run,
+    llm_write_file,
+    prompt_constructor,
+    read_from_memory,
+    write_to_memory,
+)
 
 
-def get_function_signatures(targetfiles: List[str], globals):
+def get_function_signatures(targetfiles: list[str], globals):
     """Get the function signatures and a one-sentence summary for each function"""
     all_sigs = []
 
@@ -36,7 +36,7 @@ def get_function_signatures(targetfiles: List[str], globals):
         sigs_file_name = targetfile + "_sigs.json"
 
         if file_exists_in_memory(sigs_file_name):
-            with open(os.path.join("memory", sigs_file_name), "r") as f:
+            with open(os.path.join("memory", sigs_file_name)) as f:
                 sigs = json.load(f)
             all_sigs.extend(sigs)
 
@@ -44,7 +44,7 @@ def get_function_signatures(targetfiles: List[str], globals):
             function_signatures_template = prompt_constructor(HIERARCHY, GUIDELINES, GET_FUNCTION_SIGNATURES)
 
             targetfile_content = ""
-            with open(os.path.join(globals.targetdir, targetfile), "r") as file:
+            with open(os.path.join(globals.targetdir, targetfile)) as file:
                 targetfile_content = file.read()
 
             prompt = function_signatures_template.format(
@@ -75,7 +75,7 @@ def get_dependencies(sourcefile, globals):
     internal_deps_prompt_template = prompt_constructor(HIERARCHY, GUIDELINES, GET_INTERNAL_DEPS)
 
     sourcefile_content = ""
-    with open(os.path.join(globals.sourcedir, sourcefile), "r") as file:
+    with open(os.path.join(globals.sourcedir, sourcefile)) as file:
         sourcefile_content = file.read()
 
     prompt = external_deps_prompt_template.format(
@@ -132,7 +132,7 @@ def write_migration(sourcefile, external_deps_list, deps_per_file, globals) -> s
     write_migration_template = prompt_constructor(HIERARCHY, GUIDELINES, WRITE_CODE, WRITE_MIGRATION, SINGLEFILE)
 
     sourcefile_content = ""
-    with open(os.path.join(globals.sourcedir, sourcefile), "r") as file:
+    with open(os.path.join(globals.sourcedir, sourcefile)) as file:
         sourcefile_content = file.read()
 
     prompt = write_migration_template.format(
@@ -168,7 +168,7 @@ def add_env_files(globals):
     )
 
     dockerfile_content = ""
-    with open(os.path.join(globals.targetdir, "Dockerfile"), "r") as file:
+    with open(os.path.join(globals.targetdir, "Dockerfile")) as file:
         dockerfile_content = file.read()
 
     external_deps = read_from_memory("external_dependencies")
@@ -184,7 +184,7 @@ def add_env_files(globals):
     external_deps_name, _, external_deps_content = llm_write_file(
         prompt,
         target_path=None,
-        waiting_message=f"Creating dependencies file required for the Docker environment...",
+        waiting_message="Creating dependencies file required for the Docker environment...",
         success_message=None,
         globals=globals,
     )
@@ -203,7 +203,7 @@ def add_env_files(globals):
     llm_write_file(
         prompt,
         target_path="Dockerfile",
-        waiting_message=f"Refining Dockerfile based on dependencies required for the Docker environment...",
+        waiting_message="Refining Dockerfile based on dependencies required for the Docker environment...",
         success_message="Refined Dockerfile with dependencies required for the Docker environment.",
         globals=globals,
     )

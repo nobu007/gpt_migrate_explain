@@ -1,11 +1,11 @@
 import subprocess
-import typer
-from yaspin import yaspin
-from pathlib import Path
-from tree_sitter import Language, Parser, Node
 from collections.abc import Iterator
+from pathlib import Path
 
-from config import EXTENSION_TO_TREE_SITTER_GRAMMAR_REPO, EXTENSION_TO_LANGUAGE
+import typer
+from config import EXTENSION_TO_LANGUAGE, EXTENSION_TO_TREE_SITTER_GRAMMAR_REPO
+from tree_sitter import Language, Node, Parser
+from yaspin import yaspin
 
 
 def decompose_file(file_path: str) -> Iterator[Node]:
@@ -51,7 +51,6 @@ def decompose_file(file_path: str) -> Iterator[Node]:
 
         root_node = tree.root_node
 
-        for child in root_node.children:
-            yield child
+        yield from root_node.children
 
         spinner.ok("✅ ")

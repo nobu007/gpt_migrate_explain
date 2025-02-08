@@ -1,23 +1,24 @@
-from utils import prompt_constructor, llm_write_file, llm_run, build_directory_structure, construct_relevant_files
+import os
+import subprocess
+
+import typer
 from config import (
-    HIERARCHY,
-    GUIDELINES,
-    WRITE_CODE,
-    IDENTIFY_ACTION,
-    MOVE_FILES,
     CREATE_FILE,
-    IDENTIFY_FILE,
     DEBUG_FILE,
     DEBUG_TESTFILE,
-    HUMAN_INTERVENTION,
-    SINGLEFILE,
     FILENAMES,
-    MAX_ERROR_MESSAGE_CHARACTERS,
+    GUIDELINES,
+    HIERARCHY,
+    HUMAN_INTERVENTION,
+    IDENTIFY_ACTION,
+    IDENTIFY_FILE,
     MAX_DOCKER_LOG_CHARACTERS,
+    MAX_ERROR_MESSAGE_CHARACTERS,
+    MOVE_FILES,
+    SINGLEFILE,
+    WRITE_CODE,
 )
-import os
-import typer
-import subprocess
+from utils import build_directory_structure, construct_relevant_files, llm_run, llm_write_file, prompt_constructor
 
 
 def debug_error(error_message, relevant_files, globals):
@@ -28,7 +29,7 @@ def debug_error(error_message, relevant_files, globals):
         target_directory_structure=build_directory_structure(globals.targetdir),
     )
 
-    actions = llm_run(prompt, waiting_message=f"Planning actions for debugging...", success_message="", globals=globals)
+    actions = llm_run(prompt, waiting_message="Planning actions for debugging...", success_message="", globals=globals)
 
     action_list = actions.split(",")
 
@@ -49,7 +50,7 @@ def debug_error(error_message, relevant_files, globals):
         file_name, language, shell_script_content = llm_write_file(
             prompt,
             target_path="gpt_migrate/debug.sh",
-            waiting_message=f"Writing shell script...",
+            waiting_message="Writing shell script...",
             success_message="Wrote debug.sh based on error message.",
             globals=globals,
         )
@@ -84,7 +85,7 @@ def debug_error(error_message, relevant_files, globals):
             fileslist = globals.testfiles.split(",")
             files_to_construct = []
             for file_name in fileslist:
-                with open(os.path.join(globals.sourcedir, file_name), "r") as file:
+                with open(os.path.join(globals.sourcedir, file_name)) as file:
                     file_content = file.read()
                 files_to_construct.append(("migration_source/" + file_name, file_content))
 
@@ -105,14 +106,14 @@ def debug_error(error_message, relevant_files, globals):
         )
 
         file_names = llm_run(
-            prompt, waiting_message=f"Identifying files to debug...", success_message="", globals=globals
+            prompt, waiting_message="Identifying files to debug...", success_message="", globals=globals
         )
 
         file_name_list = file_names.split(",")
         for file_name in file_name_list:
             old_file_content = ""
             try:
-                with open(os.path.join(globals.targetdir, file_name), "r") as file:
+                with open(os.path.join(globals.targetdir, file_name)) as file:
                     old_file_content = file.read()
             except:
                 print(
@@ -146,7 +147,7 @@ def debug_error(error_message, relevant_files, globals):
             )
 
             new_file_content = ""
-            with open(os.path.join(globals.targetdir, file_name), "r") as file:
+            with open(os.path.join(globals.targetdir, file_name)) as file:
                 new_file_content = file.read()
 
             if new_file_content == old_file_content:
@@ -164,7 +165,7 @@ def debug_error(error_message, relevant_files, globals):
         )
 
         new_file_name, language, file_content = llm_write_file(
-            prompt, waiting_message=f"Creating a new file...", success_message="", globals=globals
+            prompt, waiting_message="Creating a new file...", success_message="", globals=globals
         )
 
         success_text = typer.style(f"Created new file {new_file_name}.", fg=typer.colors.GREEN)
@@ -173,14 +174,14 @@ def debug_error(error_message, relevant_files, globals):
 
 def debug_testfile(error_message, testfile, globals):
     source_file_content = ""
-    with open(os.path.join(globals.sourcedir, testfile), "r") as file:
+    with open(os.path.join(globals.sourcedir, testfile)) as file:
         source_file_content = file.read()
 
     relevant_files = construct_relevant_files([("migration_source/" + testfile, source_file_content)])
 
     file_name = f"gpt_migrate/{testfile}.tests.py"
     try:
-        with open(os.path.join(globals.targetdir, file_name), "r") as file:
+        with open(os.path.join(globals.targetdir, file_name)) as file:
             old_file_content = file.read()
     except:
         print(
@@ -210,7 +211,7 @@ def debug_testfile(error_message, testfile, globals):
         globals=globals,
     )
 
-    with open(os.path.join(globals.targetdir, file_name), "r") as file:
+    with open(os.path.join(globals.targetdir, file_name)) as file:
         new_file_content = file.read()
 
     if new_file_content == old_file_content:
@@ -228,19 +229,19 @@ def require_human_intervention(error_message, relevant_files, globals):
     )
 
     instructions = llm_run(
-        prompt, waiting_message=f"Writing instructions for how to proceed...", success_message="", globals=globals
+        prompt, waiting_message="Writing instructions for how to proceed...", success_message="", globals=globals
     )
 
     typer.echo(
         typer.style(
-            f"GPT-Migrate is having some trouble debugging your app and requires human intervention. Below are instructions for how to fix your application.",
+            "GPT-Migrate is having some trouble debugging your app and requires human intervention. Below are instructions for how to fix your application.",
             fg=typer.colors.BLUE,
         )
     )
     print(instructions)
     typer.echo(
         typer.style(
-            f"Once the fix is implemented, you can pick up from the testing phase using the `--step test` flag.",
+            "Once the fix is implemented, you can pick up from the testing phase using the `--step test` flag.",
             fg=typer.colors.BLUE,
         )
     )
