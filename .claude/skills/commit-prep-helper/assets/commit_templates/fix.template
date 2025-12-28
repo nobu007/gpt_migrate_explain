@@ -1,0 +1,19 @@
+fix({scope}): resolve {issue_description}
+
+{detailed_description}
+
+Root cause:
+- {root_cause}
+
+Solution:
+- {solution_1}
+- {solution_2}
+
+Verification:
+- Tests: {test_count} total, {coverage_percentage}% coverage
+- Lint: {lint_status}
+- Manual testing: {testing_status}
+
+Quality:
+- Files changed: {files_count}
+- Security issues: {security_issues}

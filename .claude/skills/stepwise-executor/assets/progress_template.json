@@ -1,0 +1,30 @@
+{
+  "original_goal": "作業目標の説明",
+  "started_at": "2025-01-15T10:00:00",
+  "completed_at": null,
+  "status": "in_progress",
+  "total_steps": 5,
+  "completed_steps": 0,
+  "steps": [
+    {
+      "step": 1,
+      "title": "ステップのタイトル",
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null,
+      "notes": []
+    },
+    {
+      "step": 2,
+      "title": "別のステップ",
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null,
+      "notes": []
+    }
+  ],
+  "metadata": {
+    "created_by": "stepwise-executor",
+    "version": "1.0"
+  }
+}

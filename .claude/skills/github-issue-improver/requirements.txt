@@ -1,0 +1,11 @@
+# Requirements for GitHub Issue Improver Skill
+anthropic>=0.34.0
+
+# GitHub API client
+PyGithub>=2.0.0
+
+# HTTP requests
+requests>=2.31.0
+
+# Environment variable management
+python-dotenv>=1.0.0

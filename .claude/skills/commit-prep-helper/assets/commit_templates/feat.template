@@ -1,0 +1,17 @@
+feat({scope}): {brief_description}
+
+{detailed_description}
+
+Changes:
+- {change_1}
+- {change_2}
+- {change_3}
+
+Testing:
+- Tests: {test_count} total, {coverage_percentage}% coverage
+- Lint: {lint_status}
+
+Quality:
+- Files changed: {files_count}
+- Security issues: {security_issues}
+- Code review: {review_status}

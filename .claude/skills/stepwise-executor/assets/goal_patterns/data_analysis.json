@@ -1,0 +1,59 @@
+{
+  "pattern_name": "data_analysis",
+  "description": "データ分析プロジェクトの典型的なパターン",
+  "common_steps": [
+    {
+      "phase": "data_collection",
+      "typical_steps": [
+        "データソースの特定",
+        "データ抽出",
+        "データ統合"
+      ]
+    },
+    {
+      "phase": "data_preparation",
+      "typical_steps": [
+        "データクレンジング",
+        "欠損値処理",
+        "異常値検出",
+        "特徴量エンジニアリング"
+      ]
+    },
+    {
+      "phase": "analysis",
+      "typical_steps": [
+        "探索的データ分析",
+        "統計分析",
+        "相関分析",
+        "仮説検証"
+      ]
+    },
+    {
+      "phase": "visualization",
+      "typical_steps": [
+        "グラフ作成",
+        "ダッシュボード構築",
+        "インサイト抽出"
+      ]
+    },
+    {
+      "phase": "reporting",
+      "typical_steps": [
+        "分析結果のまとめ",
+        "レポート作成",
+        "プレゼンテーション準備"
+      ]
+    }
+  ],
+  "estimated_duration": {
+    "simple_analysis": "1-3日",
+    "standard_analysis": "1-2週間",
+    "complex_analysis": "1ヶ月以上"
+  },
+  "key_considerations": [
+    "データ品質の確認",
+    "再現性の確保",
+    "適切な可視化手法の選択",
+    "ビジネス価値への焦点"
+  ]
+}

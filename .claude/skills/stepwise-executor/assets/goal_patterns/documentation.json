@@ -1,0 +1,52 @@
+{
+  "pattern_name": "documentation",
+  "description": "ドキュメント作成プロジェクトの典型的なパターン",
+  "common_steps": [
+    {
+      "phase": "planning",
+      "typical_steps": [
+        "対象読者の特定",
+        "ドキュメント構成の設計",
+        "スタイルガイドの確認"
+      ]
+    },
+    {
+      "phase": "content_creation",
+      "typical_steps": [
+        "概要の執筆",
+        "詳細セクションの執筆",
+        "コード例の作成",
+        "図表の作成"
+      ]
+    },
+    {
+      "phase": "review",
+      "typical_steps": [
+        "技術レビュー",
+        "編集レビュー",
+        "ユーザビリティテスト",
+        "修正と改善"
+      ]
+    },
+    {
+      "phase": "publication",
+      "typical_steps": [
+        "フォーマット調整",
+        "公開準備",
+        "公開",
+        "フィードバック収集"
+      ]
+    }
+  ],
+  "estimated_duration": {
+    "simple_doc": "1-2日",
+    "standard_doc": "1週間",
+    "comprehensive_doc": "2週間以上"
+  },
+  "key_considerations": [
+    "読者の知識レベルに合わせる",
+    "実用的な例を含める",
+    "検索可能性を確保",
+    "定期的な更新計画"
+  ]
+}
