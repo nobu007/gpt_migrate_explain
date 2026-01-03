@@ -1,0 +1,34 @@
+name: Infrastructure CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Validate YAML files
+      run: |
+        find . -name "*.yml" -o -name "*.yaml" | xargs -I {} sh -c 'echo "Validating {}" && python -c "import yaml; yaml.safe_load(open(\"{}\"))"'
+
+    - name: Validate JSON files
+      run: |
+        find . -name "*.json" | xargs -I {} sh -c 'echo "Validating {}" && python -c "import json; json.load(open(\"{}\"))"'
+
+  deploy:
+    needs: validate
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Deploy configuration
+      run: |
+        echo "Configuration deployment would happen here"

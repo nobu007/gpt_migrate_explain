@@ -1,0 +1,168 @@
+# ===============================================
+# UCG DevOps Distribution .gitignore
+# Standard rules for all UCG DevOps projects
+#
+# IMPORTANT: This file is auto-distributed by ucg-devops
+# DO NOT add repository-specific rules here!
+# Use .gitignore.local for your project-specific rules.
+# ===============================================
+
+# === Secrets and Sensitive Data ===
+*.env
+!*.env.example
+secrets.conf
+*.key
+*.pem
+*.token
+*.secret
+.env.local
+.env.production
+.secrets
+
+# === Build and Dependencies ===
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.venv
+
+# === Temporary and Cache Files ===
+*.log
+*.tmp
+*.temp
+.DS_Store
+*.swp
+*.swo
+*~
+.cache/
+
+# === UCG DevOps Specific ===
+.ucg-temp/
+.pytest_cache/
+.coverage
+coverage.json
+.nyc_output
+
+# === Runtime and Output ===
+logs/
+*.log.*
+run-*.log
+debug-*.log
+test-output/
+test-results/
+coverage-reports/
+*.test.log
+.test-results.json
+.ai_evaluator_snapshots/
+
+# === Backups ===
+*.backup
+*.bak
+*.orig
+*_backup
+*_bak
+
+# === IDE and Editor Files ===
+.vscode/
+.idea/
+*.iml
+.project
+.settings/
+.classpath
+*.sublime-*
+.atom/
+
+# === OS-specific ===
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+# === SSH and Certificates ===
+id_rsa*
+id_ed25519*
+*.crt
+*.csr
+certificate*
+
+# === Version Control ===
+.git/hooks/local-*
+
+# === UCG DevOps Specific ===
+docs/archive/
+docs/03_Reports/*.md
+compliance_results/
+compliance_data/
+emergency_data/
+monitoring_data/
+recovery_data/
+scaling_data/
+testing_data/
+test_output/
+**/plans/*.md
+**/PLANS/*.md
+**/*report*.md
+**/*REPORT*.md
+**/*plan*.md
+**/*PLAN*.md
+**/test*/*.json
+**/archive/*
+TASKS.md
+!**/*master_plan.md
+**/tasks/*.md
+**/module_reviews/*.yaml
+**/instructions/module_reviews/*.md
+
+# Auto-generated improvement instructions
+instructions/auto_generated/
+ai_activity_adapter_*.txt
+history.json
+latest.json
+.ai_strategy.json
+.kpi_state.json
+**/data/**/*.json
+**/data/**/*.jsonl
+.execution_history.json
+metrics/metrics.db
+
+# Local scripts and operations
+docs/03_Reports/
+*_EXT.md
+*_change_plan.md
+.processing_state
+current_agent.txt
+
+# wandb
+**/wandb/*
+**/.wandb_session/*
+!scripts_python_operations/log_management/wandb/*
+
+# serena
+.serena/cache/**/*.pkl

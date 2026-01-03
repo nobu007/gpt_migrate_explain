@@ -1,0 +1,43 @@
+# approval_policy = "untrusted"
+# sandbox_mode    = "read-only"
+approval_policy = "untrusted"
+sandbox_mode = "workspace-write"
+
+disable_response_storage = false
+model = "gpt-5-nano-2025-08-07"
+profile = "gpt-5-nano"
+
+[sandbox]
+mode = "workspace-write"
+# mode = "danger-full-access"
+
+[model_providers.openai-chat-completions]
+base_url = "<https://api.openai.com/v1>"
+env_key = "OPENAI_API_KEY"
+name = "OpenAI using Chat Completions"
+wire_api = "chat"
+
+[profiles.o3]
+approval_policy = "never"
+model = "o3"
+model_provider = "openai"
+
+[profiles.codex-mini]
+approval_policy = "never"
+model = "codex-mini-latest"
+model_provider = "openai"
+
+[profiles.gpt-5]
+approval_policy = "never"
+model = "gpt-5-2025-08-07"
+model_provider = "openai"
+
+[profiles.gpt-5-mini]
+approval_policy = "never"
+model = "gpt-5-mini-2025-08-07"
+model_provider = "openai"
+
+[profiles.gpt-5-nano]
+approval_policy = "never"
+model = "gpt-5-nano-2025-08-07"
+model_provider = "openai"

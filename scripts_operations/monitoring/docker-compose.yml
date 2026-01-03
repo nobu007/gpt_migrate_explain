@@ -1,0 +1,224 @@
+# Docker Compose configuration for UCG Monitoring Dashboard
+# This provides a complete production setup with Nginx reverse proxy
+
+version: '3.8'
+
+services:
+  # Main monitoring application
+  monitoring:
+    build:
+      context: ../../
+      dockerfile: scripts_operations/monitoring/Dockerfile
+      args:
+        BUILD_DATE: ${BUILD_DATE:-}
+        VERSION: ${VERSION:-latest}
+        VCS_REF: ${VCS_REF:-}
+    image: ucg-monitoring:${VERSION:-latest}
+    container_name: ucg-monitoring
+    restart: unless-stopped
+    
+    # Environment variables
+    environment:
+      - UCG_ENVIRONMENT=production
+      - MONITOR_HOST=0.0.0.0
+      - MONITOR_PORT=8000
+      - MONITOR_LOG_LEVEL=${MONITOR_LOG_LEVEL:-INFO}
+      - MONITOR_AUTO_BROWSER=false
+      - MONITOR_UPDATE_INTERVAL=${MONITOR_UPDATE_INTERVAL:-30}
+      - MONITOR_MAX_CONNECTIONS=${MONITOR_MAX_CONNECTIONS:-50}
+    
+    # Environment file
+    env_file:
+      - .env
+    
+    # Volumes
+    volumes:
+      - monitoring_logs:/app/logs
+      - monitoring_data:/app/data
+      - monitoring_backups:/app/backups
+      - ./config/monitoring.yaml:/app/config/monitoring.yaml:ro
+      - ./config/logging_production.yaml:/app/config/logging_production.yaml:ro
+    
+    # Network
+    networks:
+      - monitoring_network
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '2.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+    
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
+    
+    # Security
+    security_opt:
+      - no-new-privileges:true
+    
+    # User
+    user: "1000:1000"
+
+  # Nginx reverse proxy
+  nginx:
+    image: nginx:1.24-alpine
+    container_name: ucg-monitoring-nginx
+    restart: unless-stopped
+    
+    # Ports
+    ports:
+      - "80:80"
+      - "443:443"
+    
+    # Volumes
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - nginx_logs:/var/log/nginx
+    
+    # Dependencies
+    depends_on:
+      monitoring:
+        condition: service_healthy
+    
+    # Network
+    networks:
+      - monitoring_network
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  # Redis for caching (optional)
+  redis:
+    image: redis:7-alpine
+    container_name: ucg-monitoring-redis
+    restart: unless-stopped
+    
+    # Command with persistence
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    
+    # Volumes
+    volumes:
+      - redis_data:/data
+    
+    # Network
+    networks:
+      - monitoring_network
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+    
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Log aggregation (optional)
+  fluentd:
+    image: fluent/fluentd:v1.16-1
+    container_name: ucg-monitoring-fluentd
+    restart: unless-stopped
+    
+    # Volumes
+    volumes:
+      - ./fluentd/fluent.conf:/fluentd/etc/fluent.conf:ro
+      - monitoring_logs:/var/log/monitoring:ro
+      - nginx_logs:/var/log/nginx:ro
+    
+    # Network
+    networks:
+      - monitoring_network
+    
+    # Ports for log input
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+    
+    # Environment
+    environment:
+      - FLUENTD_CONF=fluent.conf
+    
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+# Networks
+networks:
+  monitoring_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# Volumes
+volumes:
+  monitoring_logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/log/ucg-monitoring
+  
+  monitoring_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/lib/ucg-monitoring
+  
+  monitoring_backups:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/backups/ucg-monitoring
+  
+  nginx_logs:
+    driver: local
+  
+  redis_data:
+    driver: local

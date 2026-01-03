@@ -1,0 +1,92 @@
+# Systemd service file for UCG Monitoring Dashboard
+# Copy this file to /etc/systemd/system/ucg-monitoring.service
+
+[Unit]
+Description=UCG Real-Time Monitoring Dashboard
+Documentation=https://github.com/your-org/ucg-devops
+After=network.target network-online.target
+Wants=network-online.target
+Requires=network.target
+
+[Service]
+Type=exec
+User=ucg-monitoring
+Group=ucg-monitoring
+WorkingDirectory=/opt/ucg-monitoring/app
+
+# Environment
+Environment=PATH=/opt/ucg-monitoring/venv/bin:/usr/local/bin:/usr/bin:/bin
+Environment=PYTHONPATH=/opt/ucg-monitoring/app
+Environment=UCG_ENVIRONMENT=production
+EnvironmentFile=-/etc/ucg-monitoring/.env
+
+# Command to start the service
+ExecStart=/opt/ucg-monitoring/venv/bin/uvicorn src.core.ai_activity_adapter.monitoring.web_app:app --host 127.0.0.1 --port 8000 --workers 4 --log-config /etc/ucg-monitoring/logging_production.yaml
+
+# Reload command (graceful restart)
+ExecReload=/bin/kill -HUP $MAINPID
+
+# Stop command (graceful shutdown)
+ExecStop=/bin/kill -TERM $MAINPID
+
+# Restart policy
+Restart=always
+RestartSec=10
+StartLimitInterval=60
+StartLimitBurst=3
+
+# Process management
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStartSec=60
+TimeoutStopSec=30
+
+# Output handling
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ucg-monitoring
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictRealtime=true
+RestrictNamespaces=true
+
+# File system access
+ReadWritePaths=/var/log/ucg-monitoring
+ReadWritePaths=/var/lib/ucg-monitoring
+ReadWritePaths=/var/backups/ucg-monitoring
+ReadWritePaths=/tmp
+
+# Network access
+PrivateNetwork=false
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+# System calls
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+MemoryMax=1G
+CPUQuota=200%
+
+# Capabilities (minimal required)
+CapabilityBoundingSet=
+AmbientCapabilities=
+
+# Additional security
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RestrictSUIDSGID=true
+RemoveIPC=true
+
+[Install]
+WantedBy=multi-user.target
+Alias=monitoring.service
