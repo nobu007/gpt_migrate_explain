@@ -14,3 +14,7 @@ contracts の llm-wiki-discipline 原則に基づき `docs/llm-wiki/` を新設�
 上流 `up/main` と HEAD を比較し、12 コミット先行を確認。上流コード自体の書き換えは最小限で、差分の大半は自組織の開発基盤追加: `_bmad`（458ファイル）・`.claude` エージェント（192ファイル）・`scripts_operations/` 監視ツール群（ucg-devops 同期）・Python 品質ツール整備（ruff/mypy/pyproject）・`gpt_migrate/steps/explain.py` の追加修正。
 
 - **Verification**: git log up/main..HEAD = 12 commits, git diff --stat up/main...HEAD = 700 files changed, +137295/-600（差分集中: _bmad・.claude・scripts_operations/monitoring）。
+
+## 2026-09-26 — 親の確定（jinno確定）
+- relations.md の階層関係を草案から確定版へ更新。親: business_operation_notes。
+- Verification: contracts registry `organization/repositories/gpt_migrate_explain.yaml` の spec.parent（ecbc226）と突合し一致を確認。
